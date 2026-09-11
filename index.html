@@ -49,10 +49,10 @@
         </div>
 
         <div class="panel purple">
-          <div class="head">Standing skin-dose map</div>
-          <div id="map3dscene" class="scene sceneShort" aria-label="Standing skin-dose map">
+          <div class="head">Skin Dose Map</div>
+          <div id="map3dscene" class="scene sceneShort" aria-label="Skin Dose Map">
             <canvas id="doseMap3d" width="900" height="520"></canvas>
-            <div class="overlay"><span class="pill">Anterior and posterior standing views</span><span class="pill">Bright clinical display</span></div>
+            
           </div>
           <div class="legend"><span>Colour scale: low → high accumulated skin dose</span><span>Standing body views are derived from the cumulative dose map</span><span>Bright background for presentation and review</span></div>
         </div>
@@ -205,7 +205,7 @@
   const I18N={
     'CathDose 3D':'CathDose 3D','Developed by Dr. Lukmanda Evan Lubis with AI assistance from OpenAI ChatGPT (GPT-5).':'Dikembangkan oleh Dr. Lukmanda Evan Lubis dengan bantuan AI dari OpenAI ChatGPT (GPT-5).','Beta version — currently under research validation.':'Versi beta — saat ini dalam tahap validasi penelitian.',
     'Add exposure event':'Tambah event paparan','Fluoro template':'Templat fluoroskopi','Cine template':'Templat cine','Export events CSV':'Ekspor event CSV','Import events CSV':'Impor event CSV','Import RDSR / dose report':'Impor RDSR / laporan dosis','Clear all events':'Hapus semua event','Annotations: on':'Anotasi: aktif','Annotations: off':'Anotasi: nonaktif','Selected event:':'Event terpilih:','none':'tidak ada',
-    'Live 3D geometry':'Geometri 3D langsung','Standing skin-dose map':'Peta dosis kulit posisi berdiri','Live 3D geometry and skin-dose map':'Geometri 3D langsung dan peta dosis kulit','Drag to orbit':'Seret untuk memutar','Wheel to zoom':'Gulir untuk zoom','Geometry + cumulative skin-dose heat map':'Geometri + peta panas dosis kulit kumulatif','Simple cathlab geometry preview':'Pratinjau geometri cathlab sederhana','Anterior and posterior standing views':'Tampilan berdiri anterior dan posterior','Bright clinical display':'Tampilan klinis cerah',
+    'Live 3D geometry':'Geometri 3D langsung','Skin Dose Map':'Peta Dosis Kulit','Standing skin-dose map':'Peta dosis kulit posisi berdiri','Live 3D geometry and skin-dose map':'Geometri 3D langsung dan peta dosis kulit','Drag to orbit':'Seret untuk memutar','Wheel to zoom':'Gulir untuk zoom','Geometry + cumulative skin-dose heat map':'Geometri + peta panas dosis kulit kumulatif','Simple cathlab geometry preview':'Pratinjau geometri cathlab sederhana','Anterior and posterior standing views':'Tampilan berdiri anterior dan posterior','Bright clinical display':'Tampilan klinis cerah',
     'This single 3D model combines cathlab geometry and the accumulated skin-dose heat map on the patient surface. Stored-event selection no longer locks the model. The live sliders always control the preview, and':'Model 3D tunggal ini menggabungkan geometri cathlab dan peta panas dosis kulit kumulatif pada permukaan pasien. Pemilihan event tersimpan tidak lagi mengunci model. Slider langsung selalu mengendalikan pratinjau, dan',
     'restores a stored event when needed. Low dose appears cool-coloured and higher cumulative dose appears warm-coloured.':'mengembalikan geometri event tersimpan saat diperlukan. Dosis rendah tampil dengan warna dingin dan dosis kumulatif yang lebih tinggi dengan warna hangat.','This panel shows a lightweight 3D cathlab geometry preview to keep interaction smooth. The patient model is intentionally simplified for performance. Stored-event selection does not lock the preview, and':'Panel ini menampilkan pratinjau geometri cathlab 3D yang ringan agar interaksi tetap mulus. Model pasien sengaja disederhanakan untuk performa. Pemilihan event tersimpan tidak mengunci pratinjau, dan','restores a stored event when needed.':'mengembalikan event tersimpan saat diperlukan.','Colour scale: low → high accumulated skin dose':'Skala warna: dosis kulit kumulatif rendah → tinggi','Standing body views are derived from the cumulative dose map':'Tampilan tubuh berdiri diturunkan dari peta dosis kumulatif','Bright background for presentation and review':'Latar cerah untuk presentasi dan peninjauan',
     'Load geometry':'Muat geometri','Dose results':'Hasil dosis','Skin dose sum':'Jumlah dosis kulit','Live SSD':'SSD langsung','Live field @ skin':'Lapangan langsung di kulit','Estimated K':'Estimasi K','Estimated P':'Estimasi P',
@@ -416,17 +416,92 @@
 
   function sizeMap2D(){const r=UI.map3dscene.getBoundingClientRect(),dpr=Math.min(devicePixelRatio||1,2),w=Math.max(320,Math.round(r.width)),h=Math.max(280,Math.round(r.height));if(UI.doseMap3d.width!==Math.round(w*dpr)||UI.doseMap3d.height!==Math.round(h*dpr)){UI.doseMap3d.width=Math.round(w*dpr);UI.doseMap3d.height=Math.round(h*dpr);UI.doseMap3d.style.width=w+'px';UI.doseMap3d.style.height=h+'px'}map3Ctx.setTransform(dpr,0,0,dpr,0,0);return{w,h}}
   function colorRgbForDose(v,maxv){const s=colorForDose(v,maxv).match(/rgb\((\d+),(\d+),(\d+)\)/);return s?{r:+s[1],g:+s[2],b:+s[3]}:{r:150,g:170,b:255}}
-  function drawSilhouettePath(c,x,y,w,h){
-    const cx=x+w/2; c.beginPath(); c.arc(cx,y+h*0.11,w*0.11,0,Math.PI*2);
-    c.moveTo(cx-w*0.10,y+h*0.19); c.quadraticCurveTo(cx-w*0.15,y+h*0.23,cx-w*0.16,y+h*0.29); c.quadraticCurveTo(cx-w*0.23,y+h*0.34,cx-w*0.22,y+h*0.45); c.quadraticCurveTo(cx-w*0.19,y+h*0.60,cx-w*0.13,y+h*0.73);
-    c.lineTo(cx-w*0.10,y+h*0.97); c.lineTo(cx-w*0.02,y+h*0.97); c.lineTo(cx-w*0.01,y+h*0.76); c.lineTo(cx+w*0.01,y+h*0.76); c.lineTo(cx+w*0.02,y+h*0.97); c.lineTo(cx+w*0.10,y+h*0.97); c.lineTo(cx+w*0.13,y+h*0.73);
-    c.quadraticCurveTo(cx+w*0.19,y+h*0.60,cx+w*0.22,y+h*0.45); c.quadraticCurveTo(cx+w*0.23,y+h*0.34,cx+w*0.16,y+h*0.29); c.quadraticCurveTo(cx+w*0.15,y+h*0.23,cx+w*0.10,y+h*0.19);
-    c.lineTo(cx+w*0.07,y+h*0.34); c.lineTo(cx+w*0.15,y+h*0.58); c.lineTo(cx+w*0.10,y+h*0.60); c.lineTo(cx+w*0.03,y+h*0.40); c.lineTo(cx-w*0.03,y+h*0.40); c.lineTo(cx-w*0.10,y+h*0.60); c.lineTo(cx-w*0.15,y+h*0.58); c.lineTo(cx-w*0.07,y+h*0.34); c.closePath();
+  function drawSilhouettePath(c,x,y,w,h,front){
+    const cx=x+w/2;
+    const top=y, bottom=y+h;
+    const p=(px,py)=>[cx + px*w, top + py*h];
+    const L={
+      head:[-0.10,0.065], neck:[-0.055,0.15], shoulder:[-0.165,0.185], upperArm:[-0.235,0.32], elbow:[-0.225,0.50], wrist:[-0.18,0.67], hand:[-0.125,0.73],
+      chest:[-0.145,0.27], waist:[-0.11,0.43], pelvis:[-0.14,0.55], hip:[-0.13,0.60], outerThigh:[-0.115,0.71], knee:[-0.105,0.82], calf:[-0.09,0.92], ankle:[-0.07,0.995],
+      innerAnkle:[-0.022,0.995], crotch:[-0.028,0.62], innerKnee:[-0.042,0.81], innerThigh:[-0.055,0.69], underArm:[-0.155,0.36]
+    };
+    c.beginPath();
+    c.arc(cx, top+h*0.075, w*0.10, 0, Math.PI*2);
+    c.moveTo(...p(-0.05,0.145));
+    c.lineTo(...p(...L.neck));
+    c.bezierCurveTo(...p(-0.085,0.155), ...p(-0.13,0.17), ...p(...L.shoulder));
+    c.bezierCurveTo(...p(-0.205,0.23), ...p(-0.238,0.275), ...p(...L.upperArm));
+    c.bezierCurveTo(...p(-0.25,0.39), ...p(-0.242,0.455), ...p(...L.elbow));
+    c.bezierCurveTo(...p(-0.215,0.575), ...p(-0.195,0.635), ...p(...L.wrist));
+    c.bezierCurveTo(...p(-0.175,0.70), ...p(-0.145,0.725), ...p(...L.hand));
+    c.bezierCurveTo(...p(-0.13,0.695), ...p(-0.145,0.615), ...p(...L.underArm));
+    c.bezierCurveTo(...p(-0.13,0.31), ...p(-0.122,0.30), ...p(...L.chest));
+    c.bezierCurveTo(...p(-0.128,0.36), ...p(-0.12,0.40), ...p(...L.waist));
+    c.bezierCurveTo(...p(-0.13,0.48), ...p(-0.15,0.52), ...p(...L.pelvis));
+    c.bezierCurveTo(...p(-0.138,0.57), ...p(-0.125,0.585), ...p(...L.hip));
+    c.bezierCurveTo(...p(-0.13,0.66), ...p(-0.125,0.74), ...p(...L.knee));
+    c.bezierCurveTo(...p(-0.10,0.88), ...p(-0.08,0.955), ...p(...L.ankle));
+    c.lineTo(...p(...L.innerAnkle));
+    c.bezierCurveTo(...p(-0.02,0.94), ...p(-0.025,0.86), ...p(...L.innerKnee));
+    c.bezierCurveTo(...p(-0.028,0.75), ...p(-0.032,0.70), ...p(...L.innerThigh));
+    c.bezierCurveTo(...p(-0.036,0.665), ...p(-0.034,0.64), ...p(...L.crotch));
+    c.lineTo(...p(0.028,0.62));
+    c.bezierCurveTo(...p(0.034,0.64), ...p(0.036,0.665), ...p(0.055,0.69));
+    c.bezierCurveTo(...p(0.032,0.70), ...p(0.028,0.75), ...p(0.042,0.81));
+    c.bezierCurveTo(...p(0.025,0.86), ...p(0.02,0.94), ...p(0.022,0.995));
+    c.lineTo(...p(0.07,0.995));
+    c.bezierCurveTo(...p(0.08,0.955), ...p(0.10,0.88), ...p(0.105,0.82));
+    c.bezierCurveTo(...p(0.125,0.74), ...p(0.13,0.66), ...p(0.13,0.60));
+    c.bezierCurveTo(...p(0.125,0.585), ...p(0.138,0.57), ...p(0.14,0.55));
+    c.bezierCurveTo(...p(0.15,0.52), ...p(0.13,0.48), ...p(0.11,0.43));
+    c.bezierCurveTo(...p(0.12,0.40), ...p(0.128,0.36), ...p(0.145,0.27));
+    c.bezierCurveTo(...p(0.122,0.30), ...p(0.13,0.31), ...p(0.155,0.36));
+    c.bezierCurveTo(...p(0.145,0.615), ...p(0.13,0.695), ...p(0.125,0.73));
+    c.bezierCurveTo(...p(0.145,0.725), ...p(0.175,0.70), ...p(0.18,0.67));
+    c.bezierCurveTo(...p(0.195,0.635), ...p(0.215,0.575), ...p(0.225,0.50));
+    c.bezierCurveTo(...p(0.242,0.455), ...p(0.25,0.39), ...p(0.235,0.32));
+    c.bezierCurveTo(...p(0.238,0.275), ...p(0.205,0.23), ...p(0.165,0.185));
+    c.bezierCurveTo(...p(0.13,0.17), ...p(0.085,0.155), ...p(0.055,0.15));
+    c.lineTo(...p(0.05,0.145));
+    c.closePath();
   }
   function halfMapValue(fracX,iy,front){ let ang = front ? (Math.PI/2 + fracX*Math.PI) : (3*Math.PI/2 + fracX*Math.PI); if(ang>=Math.PI*2) ang-=Math.PI*2; const pos=ang/(Math.PI*2)*MAP_W; const x0=Math.floor(pos)%MAP_W, x1=(x0+1)%MAP_W, t=pos-Math.floor(pos); const v0=state.map[iy*MAP_W+x0]||0, v1=state.map[iy*MAP_W+x1]||0; return v0*(1-t)+v1*t; }
-  function bodyHalfWidth(u){ if(u<0.18) return .12 + (u/.18)*.05; if(u<0.32) return .17 + ((u-.18)/.14)*.05; if(u<0.55) return .22 - ((u-.32)/.23)*.02; if(u<0.74) return .20 + ((u-.55)/.19)*.03; if(u<0.97) return .13 - ((u-.74)/.23)*.05; return .08; }
-  function drawStandingView(c,x,y,w,h,front,label){ c.save(); drawSilhouettePath(c,x,y,w,h); c.fillStyle='#d9dde2'; c.fill(); c.strokeStyle='#6b7280'; c.lineWidth=1.2; c.stroke(); c.clip(); const maxv=Math.max(1,state.maxDose), rows=MAP_H, cols=72; for(let iy=0; iy<rows; iy++){ const y0=y + iy/rows*h, y1=y + (iy+1)/rows*h, u=(iy+.5)/rows, halfW=bodyHalfWidth(u)*w, cx=x+w/2; for(let ix=0; ix<cols; ix++){ const frac=(ix+.5)/cols, xv=(frac*2-1)*halfW, cellW=(2*halfW)/cols; const v=halfMapValue(frac,iy,front); if(v<=0) continue; const rgb=colorRgbForDose(v,maxv), alpha=0.25 + 0.65*Math.pow(v/maxv,.75); c.fillStyle=`rgba(${rgb.r},${rgb.g},${rgb.b},${alpha})`; c.fillRect(cx+xv-cellW/2, y0, cellW+1, (y1-y0)+1); } } c.restore(); c.fillStyle='#1f2937'; c.font='700 13px system-ui'; c.textAlign='center'; c.fillText(label,x+w/2,y+h+20); c.textAlign='left'; }
-  function drawDoseMap3D(g){const c=map3Ctx,{w:W,h:H}=sizeMap2D();c.clearRect(0,0,W,H);const grad=c.createLinearGradient(0,0,0,H);grad.addColorStop(0,'#ffffff');grad.addColorStop(1,'#f7f8fa');c.fillStyle=grad;c.fillRect(0,0,W,H); c.fillStyle='#374151'; c.font='600 12px system-ui'; c.fillText(tr('Standing skin-dose map'),12,20); c.fillText('PSD '+fmt(state.maxDose)+' mGy',12,38); const pad=28, figW=Math.min((W-pad*3)/2, 180), figH=Math.min(H-110, 320), y=55, x1=W/2-figW-18, x2=W/2+18; drawStandingView(c,x1,y,figW,figH,false,'Posterior'); drawStandingView(c,x2,y,figW,figH,true,'Anterior'); const gx=W/2-120, gy=H-38, gw=240, gh=12, gr=c.createLinearGradient(gx,0,gx+gw,0); for(let i=0;i<=24;i++)gr.addColorStop(i/24,colorForDose(i/24,1)); c.fillStyle=gr; c.fillRect(gx,gy,gw,gh); c.strokeStyle='#94a3b8'; c.strokeRect(gx,gy,gw,gh); c.fillStyle='#4b5563'; c.font='600 11px system-ui'; c.fillText(tr('Low'),gx-28,gy+10); c.fillText(tr('High'),gx+gw+8,gy+10); if(state.maxDose>0){ c.fillStyle='#6b7280'; c.font='11px system-ui'; c.fillText(state.lang==='id'?'Pemetaan kumulatif pada permukaan tubuh (tampilan berdiri).':'Cumulative dose mapped onto the body surface (standing display).', pad, H-60); } }
+  function bodyHalfWidth(u){ if(u<0.15) return .10 + (u/.15)*.05; if(u<0.22) return .15 + ((u-.15)/.07)*.08; if(u<0.42) return .23 - ((u-.22)/.20)*.07; if(u<0.58) return .16 + ((u-.42)/.16)*.02; if(u<0.70) return .18 - ((u-.58)/.12)*.05; if(u<0.84) return .13 - ((u-.70)/.14)*.03; if(u<0.97) return .10 - ((u-.84)/.13)*.03; return .065; }
+  function drawStandingView(c,x,y,w,h,front,label){
+    c.save();
+    drawSilhouettePath(c,x,y,w,h,front);
+    c.fillStyle='#d3d8de'; c.fill();
+    c.strokeStyle='#6b7280'; c.lineWidth=1.35; c.stroke();
+    c.clip();
+    const maxv=Math.max(1,state.maxDose), rows=MAP_H, cols=92;
+    for(let iy=0; iy<rows; iy++){
+      const y0=y + iy/rows*h, y1=y + (iy+1)/rows*h, u=(iy+.5)/rows, halfW=bodyHalfWidth(u)*w, cx=x+w/2;
+      for(let ix=0; ix<cols; ix++){
+        const frac=(ix+.5)/cols, xv=(frac*2-1)*halfW, cellW=(2*halfW)/cols;
+        const v=halfMapValue(frac,iy,front); if(v<=0) continue;
+        const rgb=colorRgbForDose(v,maxv), alpha=0.16 + 0.78*Math.pow(v/maxv,.82);
+        c.fillStyle=`rgba(${rgb.r},${rgb.g},${rgb.b},${alpha})`;
+        c.fillRect(cx+xv-cellW/2, y0, cellW+0.8, (y1-y0)+0.8);
+      }
+    }
+    c.restore();
+    c.fillStyle='#1f2937'; c.font='700 13px system-ui'; c.textAlign='center'; c.fillText(label,x+w/2,y+h+20); c.textAlign='left';
+  }
+  function drawDoseMap3D(g){
+    const c=map3Ctx,{w:W,h:H}=sizeMap2D();
+    c.clearRect(0,0,W,H);
+    const grad=c.createLinearGradient(0,0,0,H); grad.addColorStop(0,'#ffffff'); grad.addColorStop(1,'#f8f9fb');
+    c.fillStyle=grad; c.fillRect(0,0,W,H);
+    c.fillStyle='#4b5563'; c.font='700 12px system-ui'; c.fillText(tr('Skin Dose Map'),12,20); c.fillText('PSD '+fmt(state.maxDose)+' mGy',12,38);
+    const pad=24, figW=Math.min((W-pad*3)/2, 180), figH=Math.min(H-118, 330), y=54, x1=W/2-figW-18, x2=W/2+18;
+    drawStandingView(c,x1,y,figW,figH,false,'Posterior');
+    drawStandingView(c,x2,y,figW,figH,true,'Anterior');
+    const gx=W/2-120, gy=H-34, gw=240, gh=12, gr=c.createLinearGradient(gx,0,gx+gw,0);
+    for(let i=0;i<=24;i++)gr.addColorStop(i/24,colorForDose(i/24,1));
+    c.fillStyle=gr; c.fillRect(gx,gy,gw,gh); c.strokeStyle='#94a3b8'; c.strokeRect(gx,gy,gw,gh);
+    c.fillStyle='#4b5563'; c.font='600 11px system-ui'; c.fillText(tr('Low'),gx-28,gy+10); c.fillText(tr('High'),gx+gw+8,gy+10);
+    if(state.maxDose>0){ c.fillStyle='#6b7280'; c.font='11px system-ui'; c.fillText(state.lang==='id'?'Dosis kumulatif dipetakan pada permukaan tubuh.':'Cumulative dose mapped onto the body surface.', pad, H-54); }
+  }
 
   // CSV helpers
   function csvEscape(v){v=String(v??'');return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v}
